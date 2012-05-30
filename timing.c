@@ -1,34 +1,14 @@
-/*
- *  mqsend.c
- *
- *  Simple example of using mqueue messaging between processes
- *
- *  Run mqsend in one terminal window, then after a few messages
- *  are queued (less than 5) run mqreceive in another terminal window
- *
-*/
-
-
 #include <stdio.h>
 #include <mqueue.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <string.h>
-#include "mqtest.h"
+#include "timing.h"
 
 #define Q_FLAGS  O_RDWR | O_CREAT
 #define Q_PERM   S_IRUSR | S_IWUSR | S_IROTH
 
 int i;
-char inter1[MESSAGESIZE], inter2[MESSAGESIZE], inter3[MESSAGESIZE];
-
-typedef struct{
-       int ns;
-       int ew;
-       int nsp;
-       int ewp;
-       int tram;
-} light_state;
 
 // States initialisation: 0 = red; 1 = yellow/flashing; 2 = green;
 void init_states(light_state* states){
@@ -82,7 +62,7 @@ void init_states(light_state* states){
    states[7].tram = 0;
 }
 
-int timer_based(light_state current, light_state* states, mqd_t qd){
+int timer_based(light_state current, light_state* states, mqd_t qd, char* inter){
     /*char tram[MESSAGESIZE];
    
    if(strcmp("y",tram) != 0){
@@ -91,7 +71,7 @@ int timer_based(light_state current, light_state* states, mqd_t qd){
    }*/
    
    //If input is to switch modes, then return false
-   if(strcmp("sensor",inter3) == 0)
+   if(strcmp("sensor",inter) == 0)
       return 0;
    
    switch(i){
@@ -120,15 +100,16 @@ int timer_based(light_state current, light_state* states, mqd_t qd){
       mq_send(qd, "state4\n", MESSAGESIZE, 0);
       break;
    case 5:
-	  printf("Tram check | %s\n", inter2);
-      if(strcmp("y",inter2) == 0){
+      printf("Tram check | %s\n", inter);
+      if(strcmp("y",inter) == 0){
         current = states[4];
         mq_send(qd, "state5\n", MESSAGESIZE, 0);
-        strcpy(inter2,"n\0");
+        strcpy(inter,"n\0");
         sleep(2); //20
       }
       else
         sleep(2);
+      printf("Tram check2 | %s\n", inter);
       break;
    case 6:
       current = states[5];
@@ -149,7 +130,7 @@ int timer_based(light_state current, light_state* states, mqd_t qd){
    return 1;
 }
 
-int sensor_based(light_state current, light_state* states, mqd_t qd){
+int sensor_based(light_state current, light_state* states, mqd_t qd, char* inter){
    time_t seconds;
     char nscar[MESSAGESIZE], tram[MESSAGESIZE], ewcar[MESSAGESIZE];
    
@@ -190,7 +171,7 @@ int sensor_based(light_state current, light_state* states, mqd_t qd){
         strcpy(nscar,"n\0");
       }
       else 
-		i--;
+      i--;
       break;
    case 2:
       current = states[2];
@@ -207,7 +188,7 @@ int sensor_based(light_state current, light_state* states, mqd_t qd){
       mq_send(qd, "state4\n", MESSAGESIZE, 0);
       break;
    case 5:
-      if(strcmp("y",inter2) == 0){
+      if(strcmp("y",inter) == 0){
         current = states[4];
         mq_send(qd, "state5\n", MESSAGESIZE, 0);
         sleep(2);
@@ -239,79 +220,4 @@ int sensor_based(light_state current, light_state* states, mqd_t qd){
    }
    
    return 1;
-}
-
-int main(void)
-{
-    mqd_t qd;
-    mqd_t qd1, qd2, qd3;
-    int state;
-    light_state states[8];
-    light_state current;
-    int switcher;
-
-    struct  mq_attr  attr;
-
-    init_states(states);
-
-    attr.mq_maxmsg = 100;
-    attr.mq_msgsize = MESSAGESIZE;
-    attr.mq_flags = 0;
-    state = 0;
-    current = states[0];
-    i = 0;
-	
-	qd1 = mq_open("/net/bruc3.sece-lab.rmit.edu.au/root/wang1", O_RDONLY);
-	qd2 = mq_open("/net/bruc3.sece-lab.rmit.edu.au/root/wang2", O_RDONLY);
-	qd3 = mq_open("/net/bruc3.sece-lab.rmit.edu.au/root/wang3", O_RDONLY);
-	mq_getattr(qd, &attr);
-
-    qd = mq_open("/root/wang", Q_FLAGS, Q_PERM, &attr);
-    if (qd != -1){
-      while(1){
-         while(switcher){
-            switcher = timer_based(current, states, qd);
-			
-            if(i == 0){
-				mq_send(qd, "trams?", MESSAGESIZE, 0);
-        		strcpy(inter2,"\0");
-				while(1){
-						mq_send(qd, inter2, MESSAGESIZE, 0);
-						mq_receive(qd3, inter2, MESSAGESIZE, NULL);
-						if(strcmp(inter2,"y") == 0 || strcmp(inter2,"n") == 0)
-							break;
-				}
-			}
-			
-            if(i == 8)
-               i = 0;
-            else
-               i++;
-         }
-         switcher = 1;
-         i = 0;
-         mq_send(qd, "Switched modes\n", MESSAGESIZE, 0);
-         while(switcher){
-            switcher = sensor_based(current, states, qd);
-            
-            if(i == 8)
-               i = 0;
-            else
-               i++;
-			
-			mq_receive(qd1, inter1, MESSAGESIZE, NULL);
-			mq_receive(qd2, inter2, MESSAGESIZE, NULL);
-			mq_receive(qd3, inter3, MESSAGESIZE, NULL);
-         }
-         switcher = 1;
-         i = 0;
-         mq_send(qd, "Switched modes\n", MESSAGESIZE, 0);
-      }
-    }
-    mq_close(qd);
-    mq_close(qd1);
-    mq_close(qd2);
-    mq_close(qd3);
-    mq_unlink("/root/wang");
-    return 0;
 }

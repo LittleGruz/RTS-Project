@@ -27,9 +27,9 @@ int main (void)
     attr.mq_msgsize = MESSAGESIZE;
     attr.mq_flags = 0;
 
-    if ((qd = mq_open("/root/wang", O_RDONLY)) != -1)
+    if ((qd = mq_open("/root/comm", O_RDONLY)) != -1)
     {
-		if((qd2 = mq_open("/root/wang3", Q_FLAGS, Q_PERM, &attr)) != 1){
+		if((qd2 = mq_open("/root/comm2", Q_FLAGS, Q_PERM, &attr)) != 1){
 			mq_getattr(qd, &attr);
 			printf ("max. %u msgs, %u bytes; waiting: %u\n",
 					attr.mq_maxmsg, attr.mq_msgsize, attr.mq_curmsgs);
