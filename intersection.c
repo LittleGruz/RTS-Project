@@ -33,19 +33,20 @@ int main(void)
             
          while (1)
          {
+            /****** TIMED MODE ******/
             while(switcher){
-
-               switcher = timer_based(current, states, qd2, i, waiting);
                //mq_receive(qd, buf, MESSAGESIZE, NULL)
          
                if(i == 0){
                   strcpy(waiting,"\0");
       
-                  // May need to change with threads
+                  // USER_INPUT
                   /* If multiple things waiting, input should still just be one
                      word e.g. nsc-t|ewpewc*/
-                  printf("What is waiting? (t/nsc/ewc/nsp/ewp):\n");
+                  printf("What is waiting? (t/nsc/ewc/nsp/ewp)(change):\n");
                   scanf("%s", waiting);
+                  
+                  // Check for waiting entities
                   if(strstr(waiting,"t") != NULL){
                      printf("Tram waiting\n");
                   }
@@ -61,33 +62,40 @@ int main(void)
                   if(strstr(waiting,"ewp") != NULL){
                      printf("EW pedestrian waiting\n");
                   }
-                  if(strstr(waiting,"sensor") != NULL){
+                  if(strstr(waiting,"change") != NULL){
                      printf("Switching modes\n");
                      switcher = 0;
                   }
                }
+               
+               switcher = sensor_based(current, states, qd, i, waiting);
          
-            if(i == 8)
-              i = 0;
-            else
-              i++;
+               if(i == 8)
+                 i = 0;
+               else
+                 i++;
             }
             
             // Check if users wants to exit
             if(!strcmp(waiting, "done"))
                break;
             
+            /****** END TIMED MODE ******/
+            
             // Re-initialise values
             switcher = 1;
             i = 0;
-            mq_send(qd, "Switched modes\n", MESSAGESIZE, 0);
+            printf("Sensor mode active\n");
             
+            /****** SENSOR MODE ******/
             while(switcher){
-               switcher = sensor_based(current, states, qd, i, waiting);
-               
-               // May need to change with threads
-               printf("What is waiting? (t/nsc/ewc/nsp/ewp):\n");
+               strcpy(waiting,"\0");
+
+               // USER_INPUT
+               printf("What is waiting? (t/nsc/ewc/nsp/ewp)(change):\n");
                scanf("%s", waiting);
+               
+               // Check for waiting entities
                if(strstr(waiting,"t") != NULL){
                   printf("Tram waiting\n");
                }
@@ -103,28 +111,33 @@ int main(void)
                if(strstr(waiting,"ewp") != NULL){
                   printf("EW pedestrian waiting\n");
                }
-               if(strstr(waiting,"sensor") != NULL){
+               if(strstr(waiting,"change") != NULL){
                   printf("Switching modes\n");
                   switcher = 0;
                }
+               
+               switcher = sensor_based(current, states, qd, i, waiting);
                
                if(i == 8)
                   i = 0;
                else
                   i++;
             }
-            
-            // Re-initialise values
-            switcher = 1;
-            i = 0;
-            mq_send(qd, "Switched modes\n", MESSAGESIZE, 0);
    
             // Check if users wants to exit
             if(!strcmp(waiting, "done"))
                break;
+               
+            /****** END SENSOR MODE ******/
+            
+            // Re-initialise values
+            switcher = 1;
+            i = 0;
+            printf("Timer based mode active\n");
          }
-       mq_close(qd);
-       mq_close(qd2);
+         mq_close(qd);
+         mq_close(qd2);
+         mq_unlink("/root/comm2");
      }
    }
    return 0;

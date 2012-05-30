@@ -8,9 +8,7 @@
 #define Q_FLAGS  O_RDWR | O_CREAT
 #define Q_PERM   S_IRUSR | S_IWUSR | S_IROTH
 
-int i;
-
-// States initialisation: 0 = red; 1 = yellow/flashing; 2 = green;
+/* States initialisation: 0 = red; 1 = yellow/flashing; 2 = green;*/
 void init_states(light_state* states){
    states[0].ns = 0;
    states[0].ew = 0;
@@ -62,10 +60,16 @@ void init_states(light_state* states){
    states[7].tram = 0;
 }
 
+/* Function for when the lights change states based on a timer*/
+/* current = the current light state
+   states = the list of all the light states
+   qd = the place where messages will be sent to
+   i = the state which the intersection is up to
+   waiting = contains which sensors have been triggered */
 int timer_based(light_state *current, light_state* states, mqd_t qd, int i, char* waiting){
    
    // If input is to switch modes, then return false
-   if(strstr(waiting, "sensor") != NULL)
+   if(strstr(waiting, "change") != NULL)
       return 0;
    
    // All the state switching and actions
@@ -123,11 +127,17 @@ int timer_based(light_state *current, light_state* states, mqd_t qd, int i, char
    return 1;
 }
 
+/* Function for when the lights are responsive to sensors*/
+/* current = the current light state
+   states = the list of all the light states
+   qd = the place where messages will be sent to
+   i = the state which the intersection is up to
+   waiting = contains which sensors have been triggered */
 int sensor_based(light_state *current, light_state* states, mqd_t qd, int i, char* waiting){
    time_t seconds;
    
    //If input is to switch modes, then return false
-   if(strstr(waiting,"timed") == 0)
+   if(strstr(waiting,"change") != NULL)
       return 0;
    
    switch(i){

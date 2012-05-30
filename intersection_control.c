@@ -8,12 +8,10 @@
 #define Q_FLAGS  O_RDWR | O_CREAT
 #define Q_PERM   S_IRUSR | S_IWUSR | S_IROTH
 
-char inter1[MESSAGESIZE], inter2[MESSAGESIZE], inter3[MESSAGESIZE];
-
-int main(void)
-{
+int main(void){
    mqd_t qd;
    mqd_t qd1, qd2, qd3;
+   char inter1[MESSAGESIZE], inter2[MESSAGESIZE], inter3[MESSAGESIZE];
 
    struct  mq_attr  attr;
 
@@ -26,6 +24,8 @@ int main(void)
    qd3 = mq_open("/root/comm3", O_RDONLY);
 
    mq_getattr(qd, &attr);
+   printf ("max. %u msgs, %u bytes; waiting: %u\n",
+            attr.mq_maxmsg, attr.mq_msgsize, attr.mq_curmsgs);
 
    qd = mq_open("/root/comm", Q_FLAGS, Q_PERM, &attr);
    if (qd != -1){
@@ -40,15 +40,19 @@ int main(void)
          if(mq_receive(qd3, inter3, MESSAGESIZE, NULL) > 0){
             printf("Intersection3: %s\n", inter3);
          }
-         // Change this when threads get added
+            printf("Intersection3:\n");
+         
+         // USER_INPUT for exiting
          if(strcmp(inter1, "done") == 0 || strcmp(inter2, "done") == 0 || strcmp(inter3, "done") == 0)
             break;
       }
    }
+   
    mq_close(qd);
    mq_close(qd1);
    mq_close(qd2);
    mq_close(qd3);
    mq_unlink("/root/comm");
+   
    return 0;
 }
