@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <mqueue.h>
 #include <sys/stat.h>
-#include "mqtest.h"
 #include "timing.h"
 
 #define Q_FLAGS  O_RDWR | O_CREAT
@@ -13,7 +12,7 @@ int main(void)
    char buf[MESSAGESIZE], buf2[MESSAGESIZE];
    char waiting[MESSAGESIZE];
    light_state states[8];
-   light_state current;
+   light_state* current;
    int switcher, i;
 
    struct  mq_attr attr;
@@ -21,7 +20,7 @@ int main(void)
    attr.mq_msgsize = MESSAGESIZE;
    attr.mq_flags = 0;
    
-   states = init_states(states);
+   init_states(states);
    i = 0;
    switcher = 1;
 
@@ -31,17 +30,20 @@ int main(void)
          mq_getattr(qd, &attr);
          printf ("max. %u msgs, %u bytes; waiting: %u\n",
             attr.mq_maxmsg, attr.mq_msgsize, attr.mq_curmsgs);
+            
          while (1)
          {
             while(switcher){
 
-               switcher = timer_based(current, states, qd2, waiting);
+               switcher = timer_based(current, states, qd2, i, waiting);
                //mq_receive(qd, buf, MESSAGESIZE, NULL)
          
                if(i == 0){
                   strcpy(waiting,"\0");
       
-                  //Change all these if conditions after threads are implemented
+                  // May need to change with threads
+                  /* If multiple things waiting, input should still just be one
+                     word e.g. nsc-t|ewpewc*/
                   printf("What is waiting? (t/nsc/ewc/nsp/ewp):\n");
                   scanf("%s", waiting);
                   if(strstr(waiting,"t") != NULL){
@@ -70,24 +72,55 @@ int main(void)
             else
               i++;
             }
+            
+            // Check if users wants to exit
+            if(!strcmp(waiting, "done"))
+               break;
+            
+            // Re-initialise values
             switcher = 1;
             i = 0;
             mq_send(qd, "Switched modes\n", MESSAGESIZE, 0);
-            while(switcher){
-               switcher = sensor_based(current, states, qd, waiting);
             
+            while(switcher){
+               switcher = sensor_based(current, states, qd, i, waiting);
+               
+               // May need to change with threads
+               printf("What is waiting? (t/nsc/ewc/nsp/ewp):\n");
+               scanf("%s", waiting);
+               if(strstr(waiting,"t") != NULL){
+                  printf("Tram waiting\n");
+               }
+               if(strstr(waiting,"nsc") != NULL){
+                  printf("NS car waiting\n");
+               }
+               if(strstr(waiting,"ewc") != NULL){
+                  printf("EW car waiting\n");
+               }
+               if(strstr(waiting,"nsp") != NULL){
+                  printf("NS pedestrian waiting\n");
+               }
+               if(strstr(waiting,"ewp") != NULL){
+                  printf("EW pedestrian waiting\n");
+               }
+               if(strstr(waiting,"sensor") != NULL){
+                  printf("Switching modes\n");
+                  switcher = 0;
+               }
+               
                if(i == 8)
                   i = 0;
                else
                   i++;
             }
+            
+            // Re-initialise values
             switcher = 1;
             i = 0;
             mq_send(qd, "Switched modes\n", MESSAGESIZE, 0);
    
-   
-            printf("%s\n", buf);
-            if(!strcmp(buf, "done"))
+            // Check if users wants to exit
+            if(!strcmp(waiting, "done"))
                break;
          }
        mq_close(qd);

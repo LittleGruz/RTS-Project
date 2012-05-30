@@ -3,8 +3,6 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <string.h>
-#include "mqtest.h"
-
 #include "timing.h"
 
 #define Q_FLAGS  O_RDWR | O_CREAT

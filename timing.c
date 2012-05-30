@@ -11,7 +11,7 @@
 int i;
 
 // States initialisation: 0 = red; 1 = yellow/flashing; 2 = green;
-light_state* init_states(light_state* states){
+void init_states(light_state* states){
    states[0].ns = 0;
    states[0].ew = 0;
    states[0].nsp = 0;
@@ -60,46 +60,44 @@ light_state* init_states(light_state* states){
    states[7].nsp = 0;
    states[7].ewp = 0;
    states[7].tram = 0;
-   
-   return states;
 }
 
-int timer_based(light_state current, light_state* states, mqd_t qd, char* waiting){
+int timer_based(light_state *current, light_state* states, mqd_t qd, int i, char* waiting){
    
    // If input is to switch modes, then return false
-   if(strstr("sensor",waiting) != NULL)
+   if(strstr(waiting, "sensor") != NULL)
       return 0;
    
    // All the state switching and actions
    switch(i){
    case 0:
-      current = states[0];
+      current = &states[0];
       mq_send(qd, "state0\n", MESSAGESIZE, 0);
       sleep(2);
       break;
    case 1:
-      current = states[1];
+      current = &states[1];
       mq_send(qd, "state1\n", MESSAGESIZE, 0);
       sleep(3); //30
       break;
    case 2:
-      current = states[2];
+      current = &states[2];
       mq_send(qd, "state2\n", MESSAGESIZE, 0);
       sleep(5);
       break;
    case 3:
-      current = states[3];
+      current = &states[3];
       mq_send(qd, "state3\n", MESSAGESIZE, 0);
       sleep(3);
       break;
    case 4:
-      current = states[0];
+      current = &states[0];
       mq_send(qd, "state4\n", MESSAGESIZE, 0);
       break;
    case 5:
       printf("Tram check | %s\n", waiting);
-      if(strstr("t",waiting) != NULL){
-        current = states[4];
+      if(strstr(waiting,"t") != NULL){
+        current = &states[4];
         mq_send(qd, "state5\n", MESSAGESIZE, 0);
         sleep(2); //20
       }
@@ -107,17 +105,17 @@ int timer_based(light_state current, light_state* states, mqd_t qd, char* waitin
         sleep(2);
       break;
    case 6:
-      current = states[5];
+      current = &states[5];
       mq_send(qd, "state6\n", MESSAGESIZE, 0);
       sleep(3); //30
       break;
    case 7:
-      current = states[6];
+      current = &states[6];
       mq_send(qd, "state7\n", MESSAGESIZE, 0);
       sleep(5);
       break;
    case 8:
-      current = states[7];
+      current = &states[7];
       mq_send(qd, "state8\n", MESSAGESIZE, 0);
       sleep(3);
    }
@@ -125,66 +123,48 @@ int timer_based(light_state current, light_state* states, mqd_t qd, char* waitin
    return 1;
 }
 
-int sensor_based(light_state current, light_state* states, mqd_t qd, char* waiting){
+int sensor_based(light_state *current, light_state* states, mqd_t qd, int i, char* waiting){
    time_t seconds;
-    char nscar[MESSAGESIZE], tram[MESSAGESIZE], ewcar[MESSAGESIZE];
-   
-   if(strcmp("y",nscar) != 0){
-      printf("N-S Car? (y/n):\n");
-      scanf("%s", nscar);
-   }
-   if(strcmp("y",ewcar) != 0){
-      printf("E-W Car? (y/n):\n");
-      scanf("%s", ewcar);
-   }
-   if(strcmp("y",tram) != 0){
-      printf("Tram? (y/n):\n");
-      scanf("%s", tram);
-   }
    
    //If input is to switch modes, then return false
-   if(strcmp("timed",nscar) == 0
-      || strcmp("timed",ewcar) == 0
-      || strcmp("timed",tram) == 0)
+   if(strstr(waiting,"timed") == 0)
       return 0;
    
    switch(i){
    case 0:
-      current = states[0];
+      current = &states[0];
       mq_send(qd, "state0\n", MESSAGESIZE, 0);
       sleep(2);
-      //Save the time when the state will change
+      // Save the time when the state will change
       seconds = time(NULL);
       break;
    case 1:
-      current = states[1];
+      current = &states[1];
       mq_send(qd, "state1\n", MESSAGESIZE, 0);
-      //Keep it looping until 30 at least seconds have passed and sensor is triggered
-      if(time(NULL) - seconds >= 30
-            && (strcmp("y",nscar) == 0 || strcmp("y",tram) == 0)){
-         strcpy(tram,"n\0");
-         strcpy(nscar,"n\0");
+      
+      // Keep it looping until 30 at least seconds have passed and sensor is triggered
+      if(time(NULL) - seconds < 30
+            || strstr(waiting,"nsc") == NULL || strstr(waiting,"t") == NULL){
+         i--;
       }
-      else 
-      i--;
       break;
    case 2:
-      current = states[2];
+      current = &states[2];
       mq_send(qd, "state2\n", MESSAGESIZE, 0);
       sleep(5);
       break;
    case 3:
-      current = states[3];
+      current = &states[3];
       mq_send(qd, "state3\n", MESSAGESIZE, 0);
       sleep(3);
       break;
    case 4:
-      current = states[0];
+      current = &states[0];
       mq_send(qd, "state4\n", MESSAGESIZE, 0);
       break;
    case 5:
-      if(strstr("t",waiting) != NULL){
-         current = states[4];
+      if(strstr(waiting,"t") != NULL){
+         current = &states[4];
          mq_send(qd, "state5\n", MESSAGESIZE, 0);
          sleep(2);
       }
@@ -193,23 +173,21 @@ int sensor_based(light_state current, light_state* states, mqd_t qd, char* waiti
       seconds = time(NULL);
       break;
    case 6:
-      current = states[5];
+      current = &states[5];
       mq_send(qd, "state6\n", MESSAGESIZE, 0);
       //Keep it looping until 30 at least seconds have passed and sensor is triggered
-      if(time(NULL) - seconds >= 30
-         && strcmp("y",ewcar) == 0){
-         strcpy(ewcar,"n\0");
-      }
-      else
+      if(time(NULL) - seconds < 30
+         || strstr(waiting,"ewc") == NULL){
          i--;
+      }
       break;
    case 7:
-      current = states[6];
+      current = &states[6];
       mq_send(qd, "state7\n", MESSAGESIZE, 0);
       sleep(5);
       break;
    case 8:
-      current = states[7];
+      current = &states[7];
       mq_send(qd, "state8\n", MESSAGESIZE, 0);
       sleep(3);
    }
