@@ -40,7 +40,6 @@ int main(void){
          if(mq_receive(qd3, inter3, MESSAGESIZE, NULL) > 0){
             printf("Intersection3: %s\n", inter3);
          }
-            printf("Intersection3:\n");
          
          // USER_INPUT for exiting
          if(strcmp(inter1, "done") == 0 || strcmp(inter2, "done") == 0 || strcmp(inter3, "done") == 0)

@@ -152,7 +152,7 @@ int sensor_based(light_state *current, light_state* states, mqd_t qd, int i, cha
       current = &states[1];
       mq_send(qd, "state1\n", MESSAGESIZE, 0);
       
-      // Keep it looping until 30 at least seconds have passed and sensor is triggered
+      // Keep it looping until at least 30 seconds have passed and sensor is triggered
       if(time(NULL) - seconds < 30
             || strstr(waiting,"nsc") == NULL || strstr(waiting,"t") == NULL){
          i--;
@@ -185,7 +185,7 @@ int sensor_based(light_state *current, light_state* states, mqd_t qd, int i, cha
    case 6:
       current = &states[5];
       mq_send(qd, "state6\n", MESSAGESIZE, 0);
-      //Keep it looping until 30 at least seconds have passed and sensor is triggered
+      //Keep it looping until at least 30 seconds have passed and sensor is triggered
       if(time(NULL) - seconds < 30
          || strstr(waiting,"ewc") == NULL){
          i--;

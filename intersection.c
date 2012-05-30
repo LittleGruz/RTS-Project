@@ -68,7 +68,7 @@ int main(void)
                   }
                }
                
-               switcher = sensor_based(current, states, qd, i, waiting);
+               switcher = timer_based(current, states, qd2, i, waiting);
          
                if(i == 8)
                  i = 0;
@@ -116,7 +116,7 @@ int main(void)
                   switcher = 0;
                }
                
-               switcher = sensor_based(current, states, qd, i, waiting);
+               switcher = sensor_based(current, states, qd2, i, waiting);
                
                if(i == 8)
                   i = 0;
