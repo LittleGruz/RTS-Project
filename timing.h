@@ -16,7 +16,7 @@ typedef struct{
        int tram;
 } light_state;
 
-void init_states(light_state*);
+light_state* init_states(light_state*);
 
 int timer_based(light_state, light_state*, mqd_t, char*);
 
