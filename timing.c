@@ -13,16 +13,16 @@ void intersection_light_init(intersection_light_t *light_states)
 	/* EW green, EW pedestrian green */
 	light_states[1].l_traffic_ns = LIGHT_RED;
 	light_states[1].l_traffic_ew = LIGHT_GRN;
-	light_states[1].l_ped_ns = LIGHT_GRN;
-	light_states[1].l_ped_ew = LIGHT_RED;
+	light_states[1].l_ped_ns = LIGHT_RED;
+	light_states[1].l_ped_ew = LIGHT_GRN;
 	light_states[1].l_tram = LIGHT_RED;
 	light_states[1].timeout = DELAY_GO;
 	
 	/* EW green, EW pedestrian flashing */
 	light_states[2].l_traffic_ns = LIGHT_RED;
 	light_states[2].l_traffic_ew = LIGHT_GRN;
-	light_states[2].l_ped_ns = LIGHT_YLW;
-	light_states[2].l_ped_ew = LIGHT_RED;
+	light_states[2].l_ped_ns = LIGHT_RED;
+	light_states[2].l_ped_ew = LIGHT_YLW;
 	light_states[2].l_tram = LIGHT_RED;
 	light_states[2].timeout = DELAY_FLASHING;
 	
@@ -53,16 +53,16 @@ void intersection_light_init(intersection_light_t *light_states)
 	/* NS green, NS pedestrian green */
 	light_states[6].l_traffic_ns = LIGHT_GRN;
 	light_states[6].l_traffic_ew = LIGHT_RED;
-	light_states[6].l_ped_ns = LIGHT_RED;
-	light_states[6].l_ped_ew = LIGHT_GRN;
+	light_states[6].l_ped_ns = LIGHT_GRN;
+	light_states[6].l_ped_ew = LIGHT_RED;
 	light_states[6].l_tram = LIGHT_RED;
 	light_states[6].timeout = DELAY_GO;
 	
 	/* NS green, NS pedestrian flashing */
 	light_states[7].l_traffic_ns = LIGHT_GRN;
 	light_states[7].l_traffic_ew = LIGHT_RED;
-	light_states[7].l_ped_ns = LIGHT_RED;
-	light_states[7].l_ped_ew = LIGHT_YLW;
+	light_states[7].l_ped_ns = LIGHT_YLW;
+	light_states[7].l_ped_ew = LIGHT_RED;
 	light_states[7].l_tram = LIGHT_RED;
 	light_states[7].timeout = DELAY_FLASHING;
 	
