@@ -9,9 +9,13 @@ int main(int argc, char **argv)
 	thread_state_t controller_thread_state;
 	
 	intersection_state_t intersection_states[INTERSECTION_COUNT];
+	intersection_light_t override_state;
 	message_t msg[INTERSECTION_COUNT];
 	
 	printf("Central Controller, %d intersection support\n---\n\n", INTERSECTION_COUNT);
+	
+	/* Clear override target state */
+	intersection_light_safe(&override_state);
 	
 	thread_state_init(&controller_thread_state, intersection_states, msg);
 	
@@ -48,8 +52,8 @@ int main(int argc, char **argv)
 		case (int) 'x':
 		case (int) 'X':
 			/* North traffic light */
-			intersection_light_next_colour(&(light_thread_state.intersection->override.l_traffic_ns));
-			printf("North-South traffic light toggled to %c\n", light_thread_state.intersection->override.l_traffic_ns);
+			intersection_light_next_colour(&(override_state.l_traffic_ns));
+			printf("North-South traffic light toggled to %c\n", override_state.l_traffic_ns);
 			break;
 		
 		case (int) 'a':
@@ -57,8 +61,8 @@ int main(int argc, char **argv)
 		case (int) 'd':
 		case (int) 'D':
 			/* East traffic light */
-			intersection_light_next_colour(&(light_thread_state.intersection->override.l_traffic_ew));
-			printf("East-West traffic light toggled to %c\n", light_thread_state.intersection->override.l_traffic_ew);
+			intersection_light_next_colour(&(override_state.l_traffic_ew));
+			printf("East-West traffic light toggled to %c\n", override_state.l_traffic_ew);
 			break;
 			
 		/* Pedestrian lights */
@@ -67,8 +71,8 @@ int main(int argc, char **argv)
 		case (int) 'c':
 		case (int) 'C':
 			/* North-South pedestrian light */
-			intersection_light_next_colour(&(light_thread_state.intersection->override.l_ped_ns));
-			printf("North-South pedestrian light toggled to %c\n", light_thread_state.intersection->override.l_ped_ns);
+			intersection_light_next_colour(&(override_state.l_ped_ns));
+			printf("North-South pedestrian light toggled to %c\n", override_state.l_ped_ns);
 			break;
 			
 		case (int) 'e':
@@ -76,23 +80,16 @@ int main(int argc, char **argv)
 		case (int) 'z':
 		case (int) 'Z':
 			/* East-West pedestrian light */
-			intersection_light_next_colour(&(light_thread_state.intersection->override.l_ped_ew));
-			printf("East-West pedestrian light toggled to %c\n", light_thread_state.intersection->override.l_ped_ew);
+			intersection_light_next_colour(&(override_state.l_ped_ew));
+			printf("East-West pedestrian light toggled to %c\n", override_state.l_ped_ew);
 			break;
 			
 		/* Tram light */
 		case (int) 's':
 		case (int) 'S':
 			/* Tram light */
-			if (light_thread_state.intersection->tram_en)
-			{
-				intersection_light_next_colour(&(light_thread_state.intersection->override.l_tram));
-				printf("Tram light toggled to %c\n", light_thread_state.intersection->override.l_tram);
-			}
-			else
-			{
-				printf("No tram light in this intersection\n");
-			}
+			intersection_light_next_colour(&(override_state.l_tram));
+			printf("Tram light toggled to %c (if present)\n", override_state.l_tram);
 			break;
 		
 		case 32:
@@ -119,7 +116,22 @@ int main(int argc, char **argv)
 		case (int) 'o':
 		case (int) 'O':
 			/* TODO Tell selected intersection to change override */
-			printf("Switched override state on controller %d\n\n", controller);
+			intersection_states[controller].override_en = !intersection_states[controller].override_en;
+			memcpy(&(intersection_states[controller].override), &override_state, sizeof(intersection_state_t));
+			
+			sprintf(msg_buffer, "o %c ", intersection_states[controller].override_en ? '1' : '0');
+			intersection_serial(&(override_state), NULL, &(msg_buffer[4]));
+			mq_send(msg[controller].mode, msg_buffer, BUFFER_SIZE, 0);
+			
+			if (intersection_states[controller].override_en)
+			{
+				printf("Override state on controller %d set\n\n", controller);
+			}
+			else
+			{
+				printf("Override state on controller %d cleared\n\n", controller);
+			}
+			
 			break;
 		
 		case (int) '-':

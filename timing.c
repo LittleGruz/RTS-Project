@@ -174,20 +174,29 @@ bool intersection_light_next(intersection_light_t *light_states, intersection_st
 	return false;
 }
 
+void intersection_light_safe(intersection_light_t *light_state)
+{
+	light_state->l_traffic_ns = LIGHT_YLW;
+	light_state->l_traffic_ew = LIGHT_YLW;
+	light_state->l_ped_ns = LIGHT_YLW;
+	light_state->l_ped_ew = LIGHT_YLW;
+	light_state->l_tram = LIGHT_YLW;
+}
+
 void intersection_light_next_colour(light_t *light)
 {
 	switch (*light)
 	{
 	case LIGHT_RED:
-		*light = LIGHT_YLW;
+		*light = LIGHT_GRN;
 		break;
 	
 	case LIGHT_YLW:
-		*light = LIGHT_GRN;
+		*light = LIGHT_RED;
 		break;
 		
 	case LIGHT_GRN:
-		*light = LIGHT_RED;
+		*light = LIGHT_YLW;
 		break;
 	}
 }
@@ -217,18 +226,21 @@ void intersection_serial(intersection_light_t *light_state, intersection_state_t
 	buffer[i++] = light_state->l_ped_ew;
 	buffer[i++] = light_state->l_tram;
 	
-	buffer[i++] = intersection->s_car_n ? '1' : '0';
-	buffer[i++] = intersection->s_car_e ? '1' : '0';
-	buffer[i++] = intersection->s_car_s ? '1' : '0';
-	buffer[i++] = intersection->s_car_w ? '1' : '0';
-	buffer[i++] = intersection->s_ped_n ? '1' : '0';
-	buffer[i++] = intersection->s_ped_e ? '1' : '0';
-	buffer[i++] = intersection->s_ped_s ? '1' : '0';
-	buffer[i++] = intersection->s_ped_w ? '1' : '0';
-	buffer[i++] = intersection->s_tram  ? '1' : '0';
-	buffer[i++] = intersection->tram_en ? '1' : '0';
-	
-	buffer[i++] = intersection->mode == MODE_SENSOR ? 'S' : 'T';
+	if (intersection != NULL)
+	{
+		buffer[i++] = intersection->s_car_n ? '1' : '0';
+		buffer[i++] = intersection->s_car_e ? '1' : '0';
+		buffer[i++] = intersection->s_car_s ? '1' : '0';
+		buffer[i++] = intersection->s_car_w ? '1' : '0';
+		buffer[i++] = intersection->s_ped_n ? '1' : '0';
+		buffer[i++] = intersection->s_ped_e ? '1' : '0';
+		buffer[i++] = intersection->s_ped_s ? '1' : '0';
+		buffer[i++] = intersection->s_ped_w ? '1' : '0';
+		buffer[i++] = intersection->s_tram  ? '1' : '0';
+		buffer[i++] = intersection->tram_en ? '1' : '0';
+		
+		buffer[i++] = intersection->mode == MODE_SENSOR ? 'S' : 'T';
+	}
 	
 	buffer[i++] = '\n';
 	buffer[i++] = '\0';
@@ -244,18 +256,21 @@ void intersection_deserial(intersection_light_t *light_state, intersection_state
 	light_state->l_ped_ew = buffer[i++];
 	light_state->l_tram = buffer[i++];
 	
-	intersection->s_car_n = buffer[i++] == '1' ? true : false;
-	intersection->s_car_e = buffer[i++] == '1' ? true : false;
-	intersection->s_car_s = buffer[i++] == '1' ? true : false;
-	intersection->s_car_w = buffer[i++] == '1' ? true : false;
-	intersection->s_ped_n = buffer[i++] == '1' ? true : false;
-	intersection->s_ped_e = buffer[i++] == '1' ? true : false;
-	intersection->s_ped_s = buffer[i++] == '1' ? true : false;
-	intersection->s_ped_w = buffer[i++] == '1' ? true : false;
-	intersection->s_tram  = buffer[i++] == '1' ? true : false;
-	intersection->tram_en = buffer[i++] == '1' ? true : false;
-	
-	intersection->mode = buffer[i++] == 'S' ? MODE_SENSOR : MODE_TIMER;
+	if (intersection != NULL)
+	{
+		intersection->s_car_n = buffer[i++] == '1' ? true : false;
+		intersection->s_car_e = buffer[i++] == '1' ? true : false;
+		intersection->s_car_s = buffer[i++] == '1' ? true : false;
+		intersection->s_car_w = buffer[i++] == '1' ? true : false;
+		intersection->s_ped_n = buffer[i++] == '1' ? true : false;
+		intersection->s_ped_e = buffer[i++] == '1' ? true : false;
+		intersection->s_ped_s = buffer[i++] == '1' ? true : false;
+		intersection->s_ped_w = buffer[i++] == '1' ? true : false;
+		intersection->s_tram  = buffer[i++] == '1' ? true : false;
+		intersection->tram_en = buffer[i++] == '1' ? true : false;
+		
+		intersection->mode = buffer[i++] == 'S' ? MODE_SENSOR : MODE_TIMER;
+	}
 }
 
 void intersection_state_init(intersection_state_t *intersection, bool tram_en)

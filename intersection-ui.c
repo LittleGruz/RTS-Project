@@ -284,10 +284,9 @@ void *light_state_thread(void *arg)
 			case 'o':
 				/* Change override */
 				intersection->override_en = msg_buffer[2] == '1' ? true : false;
-				break;
 				
-			case 's':
-				/* Change override status */
+				intersection_deserial(&(intersection->override), NULL, &(msg_buffer[4]));
+				
 				break;
 			}
 		}

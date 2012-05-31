@@ -49,8 +49,9 @@ typedef struct {
 void intersection_light_init(intersection_light_t *light_states);
 bool intersection_light_next(intersection_light_t *light_states, intersection_state_t *intersection, int *light_current, light_mode_t *mode_current);
 void intersection_light_print(intersection_light_t *light_state, intersection_state_t *intersection);
+void intersection_light_safe(intersection_light_t *light_state);
 
-bool intersection_light_next_colour(light_t *light);
+void intersection_light_next_colour(light_t *light);
 
 void intersection_serial(intersection_light_t *light_state, intersection_state_t *intersection, char *buffer);
 void intersection_deserial(intersection_light_t *light_state, intersection_state_t *intersection, char *buffer);
