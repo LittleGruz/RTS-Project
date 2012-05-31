@@ -93,7 +93,9 @@ int main(int argc, char **argv)
 			break;
 		
 		case 32:
-			/* TODO */
+			printf("Override state:\n");
+			intersection_light_print(&override_state, &(intersection_states[controller]));
+			printf("\n");
 			break;
 		
 		case (int) 'm':
