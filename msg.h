@@ -11,7 +11,7 @@
 #define DIR_IN 0
 #define DIR_OUT 1
 
-#define MQ_PATH "/"
+#define MQ_PATH "/root/"
 
 #define MQ_RD O_RDONLY | O_CREAT | O_NONBLOCK
 #define MQ_WR O_WRONLY | O_CREAT | O_NONBLOCK
