@@ -83,21 +83,22 @@ void message_clean(message_t *message, bool clean)
 	if (message->mode != -1)
 	{
 		mq_close(message->mode);
-		mq_unlink(message->file_mode);
+		
+		if (clean)
+			mq_unlink(message->file_mode);
 	}
 		
 	if (message->status != -1)
 	{
 		mq_close(message->status);
-		mq_unlink(message->file_status);
+		
+		if (clean)
+			mq_unlink(message->file_status);
 	}
 	
-	if (clean)
-	{
-		if (message->file_mode != NULL)
-			free(message->file_mode);
+	if (message->file_mode != NULL)
+		free(message->file_mode);
 		
-		if (message->file_status != NULL)
-			free(message->file_status);
-	}
+	if (message->file_status != NULL)
+		free(message->file_status);
 }
